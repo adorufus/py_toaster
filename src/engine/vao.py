@@ -18,6 +18,11 @@ class VAO:
             vbo=self.vbo.vbos['jokowi']
         )
 
+        self.vaos['skybox'] = self.get_vao(
+            program=self.program.programs['skybox'],
+            vbo=self.vbo.vbos['skybox']
+        )
+
     def get_vao(self, program, vbo):
         vao = self.ctx.vertex_array(
             program,

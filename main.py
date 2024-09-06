@@ -2,29 +2,31 @@ import pygame as pg
 import moderngl as mgl
 import sys
 from src.engine import Cube, Camera, Light, Mesh, Texture, Scene
-from src.engine.model import Jokowi
+from src.engine.ecs import Transform
+from src.engine.model import Jokowi, Skybox
+
 
 class ToasterEngine:
     def __init__(self, win_size=(1920, 1080)):
         pg.init()
         self.WIN_SIZE = win_size
 
-        #set opengl attr
+        # set opengl attr
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
 
-        #create opengl context
-        pg.display.set_mode(self.WIN_SIZE, flags=pg.OPENGL | pg.DOUBLEBUF | pg.RESIZABLE | pg.FULLSCREEN)
+        # create opengl context
+        pg.display.set_mode(self.WIN_SIZE, flags=pg.OPENGL | pg.DOUBLEBUF | pg.RESIZABLE)
         pg.event.set_grab(True)
         pg.mouse.set_visible(False)
         pg.display.set_caption("Toaster")
 
-        #use existing opengl context
+        # use existing opengl context
         self.ctx = mgl.create_context()
         self.ctx.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
 
-        #time tracker object
+        # time tracker object
         self.clock = pg.time.Clock()
         self.time = 0
         self.delta_time = 0
@@ -34,12 +36,14 @@ class ToasterEngine:
         self.mesh = Mesh(self)
         self.scene = Scene(self)
 
-        self.scene.load(Jokowi(self, pos=(0, -15, 0),  scale=(10, 10, 10)))
+        self.scene.load(Skybox(self))
 
-        n, s = 80, 2
-        for x in range(-n, n, s):
-            for z in range(-n, n, s):
-                self.scene.load(Cube(self, pos=(x, -s, z))) 
+        self.scene.load(Jokowi(self, transform=Transform(pos=(0, -15, 0), scale=(10, 10, 10))))
+
+        # n, s = 80, 2
+        # for x in range(-n, n, s):
+        #     for z in range(-n, n, s):
+        #         self.scene.load(Cube(self, pos=(x, -s, z)))
 
     def check_events(self):
         for event in pg.event.get():
@@ -53,7 +57,7 @@ class ToasterEngine:
 
         self.scene.render()
 
-        #swap buffer
+        # swap buffer
         pg.display.flip()
 
     def get_time(self):
@@ -65,7 +69,11 @@ class ToasterEngine:
             self.check_events()
             self.camera.update()
             self.render()
-            self.delta_time = self.clock.tick(60)
+            self.delta_time = self.clock.tick(0)
+
+            fps = self.clock.get_fps()
+            print(f"Current FPS: {fps: .2f}")
+
 
 # RESOURCES = sdl2.ext.Resources(__file__, "assets")
 
@@ -83,7 +91,7 @@ class ToasterEngine:
 #             if event.type == sdl2.SDL_QUIT:
 #                 running = False
 #                 break
-        
+
 #         engine.render()
 #         engine.loop()
 

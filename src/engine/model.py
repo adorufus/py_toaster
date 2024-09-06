@@ -2,13 +2,15 @@ from moderngl import Context
 import numpy as np
 import glm
 import pygame as pg
+from .ecs import Transform
+
 
 class BaseModel:
-    def __init__(self, app, vao_name, tex_id, pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1)):
+    def __init__(self, app, vao_name, tex_id, transform: Transform):
         self.app = app
-        self.pos = pos
-        self.rot = glm.vec3([glm.radians(a) for a in rot])
-        self.scale = scale
+        self.pos = transform.pos
+        self.rot = glm.vec3([glm.radians(a) for a in transform.rot])
+        self.scale = transform.scale
         self.m_model = self.get_model_matrix()
         self.tex_id = tex_id
         self.vao = app.mesh.vao.vaos[vao_name]
@@ -25,18 +27,16 @@ class BaseModel:
         m_model = glm.rotate(m_model, self.rot.z, glm.vec3(0, 0, 1))
         m_model = glm.scale(m_model, self.scale)
         return m_model
-    
+
     def render(self):
         self.update()
         self.vao.render()
 
 
+class ExtendedBaseModel(BaseModel):
 
-
-class Cube(BaseModel):
-
-    def __init__(self, app, vao_name='cube', tex_id=0, pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1)):
-        super().__init__(app, vao_name, tex_id, pos, rot, scale)
+    def __init__(self, app, vao_name, tex_id, transform: Transform):
+        super().__init__(app, vao_name, tex_id, transform)
         self.on_init()
 
     def update(self):
@@ -53,7 +53,7 @@ class Cube(BaseModel):
         self.shader_program['m_proj'].write(self.camera.m_proj)
         self.shader_program['m_view'].write(self.camera.m_view)
         self.shader_program['m_model'].write(self.m_model)
-        
+
         self.shader_program["light.position"].write(self.app.light.position)
         self.shader_program["light.Ia"].write(self.app.light.ambient_intensity)
         self.shader_program["light.Id"].write(self.app.light.diffuse_intensity)
@@ -61,29 +61,35 @@ class Cube(BaseModel):
             self.app.light.specular_intensity)
 
 
-class Jokowi(BaseModel):
+class Cube(ExtendedBaseModel):
 
-    def __init__(self, app, vao_name='jokowi', tex_id=2, pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1)):
-        super().__init__(app, vao_name, tex_id, pos, rot, scale)
+    def __init__(self, app, vao_name='cube', tex_id=0,
+                 transform: Transform = Transform(pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1))):
+        super().__init__(app, vao_name, tex_id, transform)
+        self.on_init()
+
+
+class Jokowi(ExtendedBaseModel):
+
+    def __init__(self, app, vao_name='jokowi', tex_id=2,
+                 transform: Transform = Transform(pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1))):
+        super().__init__(app, vao_name, tex_id, transform)
+        self.on_init()
+
+
+class Skybox(ExtendedBaseModel):
+
+    def __init__(self, app, vao_name='skybox', tex_id='skybox',
+                 transform: Transform = Transform(pos=(0, 0, 0), rot=(0, 0, 0), scale=(1, 1, 1))):
+        super().__init__(app, vao_name, tex_id, transform)
         self.on_init()
 
     def update(self):
-        self.texture.use()
-        self.shader_program['m_model'].write(self.m_model)
-        self.shader_program['m_view'].write(self.camera.m_view)
-        self.shader_program['camPos'].write(self.camera.position)
+        self.shader_program['m_view'].write(glm.mat4(glm.mat3(self.camera.m_view)))
 
     def on_init(self):
         self.texture = self.app.mesh.texture.textures[self.tex_id]
-        self.shader_program['u_texture_0'] = 0
-        self.texture.use()
-
+        self.shader_program['u_texture_skybox'] = 0
+        self.texture.use(location=0)
         self.shader_program['m_proj'].write(self.camera.m_proj)
-        self.shader_program['m_view'].write(self.camera.m_view)
-        self.shader_program['m_model'].write(self.m_model)
-        
-        self.shader_program["light.position"].write(self.app.light.position)
-        self.shader_program["light.Ia"].write(self.app.light.ambient_intensity)
-        self.shader_program["light.Id"].write(self.app.light.diffuse_intensity)
-        self.shader_program["light.Is"].write(
-            self.app.light.specular_intensity)
+        self.shader_program['m_view'].write(glm.mat4(glm.mat3(self.camera.m_view)))

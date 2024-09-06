@@ -9,3 +9,4 @@ class Light:
         self.ambient_intensity = 0.1 * self.color
         self.diffuse_intensity = 0.8 * self.color
         self.specular_intensity = 1.0 * self.color
+        self.cube_ambient = glm.vec3(0.3, 0.3, 0.3)

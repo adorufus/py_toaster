@@ -20,7 +20,7 @@ uniform vec3 camPos;
 
 vec3 getLight(vec3 color) {
     vec3 Normal = normalize(normal);
-    
+
     vec3 ambient = light.Ia;
 
     vec3 lightDir = normalize(light.position - fragPos);
@@ -31,7 +31,7 @@ vec3 getLight(vec3 color) {
     vec3 reflectDir = reflect(-lightDir, Normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0), 32);
     vec3 specular = spec * light.Is;
-    
+
     return color * (ambient + diffuse + specular);
 }
 
